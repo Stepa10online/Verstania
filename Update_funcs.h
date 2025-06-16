@@ -5,14 +5,15 @@ using namespace sf;
 using namespace std;
 
 #include "all_docs.h"
-#include "Docs Funcs.h"
+#include "Documents handler.h"
 #include "eMath.h"
 #include "Animation.h"
 #include "Variables.h"
 #include "Interactions.h"
 #include "Selection.h"
 
-void Update(vector<Document>&docs, const Vector2i& m_pos, Vector2i OLDmouse_offset, Passport& passport, Pass& pass, RenderWindow& window)
+void update_Documents(vector<Document>&docs, const Vector2i& m_pos, 
+    Vector2i OLDmouse_offset, Passport& passport, Pass& pass, RenderWindow& window)
 {
     bool dragging = ImGui::IsMouseDragging(ImGuiMouseButton_Left);
     bool enable_to_close = !Interaction::IsAnyElement(Interaction::Data::Mouse_Left_DoubleClick);
@@ -20,7 +21,7 @@ void Update(vector<Document>&docs, const Vector2i& m_pos, Vector2i OLDmouse_offs
 
     for (auto& doc : docs)
     {
-        if (doc.getDocID() == "qr")
+        if (doc.getDocID() == Document::Document_ID::QR)
         {
             if (CollisionPointRect(doc.getPosition(), { 100,100,50,50 }))
             {
@@ -41,29 +42,32 @@ void Update(vector<Document>&docs, const Vector2i& m_pos, Vector2i OLDmouse_offs
             )
         {
             if (Interaction::IsAnyElement(Interaction::Data::Mouse_Left_DoubleClick) 
-                && docs[i].getDocID() == "passport" && Stamp::getColliding() == false)
+                && docs[i].getDocID() == Document::Document_ID::QR 
+                && Stamp::getColliding() == false)
             {
                 break;
             }
             // double clicked
-            if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && docs[i].getDocID() == "passport" && Stamp::getColliding()==false)
+            if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) 
+                && docs[i].getDocID() == Document::Document_ID::Passport 
+                && Stamp::getColliding()==false)
             {
                 docs[i].setSelected(true);
-                if (Passport::getStatus() == Passport::TEMP_VISA)
+                if (docs[i].isAdditionalDataContains("temporary passport"))
                 {
                     cout << "[DEBUG] temp visa" << endl;
-                    Passport::setOpened(true);
+                    docs[i].editAdditionalData("closed", "opened");
                 }
                 else
-                    if(!Passport::getOpened())
+                    if(docs[i].isAdditionalDataContains("closed"))
                     {
                         docs[i].setSize({ 320,448 });
-                        Passport::setOpened(true);
+                        docs[i].editAdditionalData("closed", "opened");
                     }
                     else 
                     {
                         docs[i].setSize({ 128,docs[i].getSize().y });
-                        Passport::setOpened(false);
+                        docs[i].editAdditionalData("opened", "closed");
                     }
                 
                 break;
@@ -92,7 +96,7 @@ void Update(vector<Document>&docs, const Vector2i& m_pos, Vector2i OLDmouse_offs
             if (ImGui::IsKeyPressed(ImGuiKey_Enter))
                 for (int n = 0; n < docs.size(); n++)
                 {
-                    if (docs[n].getDocID() == "passport")
+                    if (docs[n].getDocID() == Document::Document_ID::Passport)
                     {
                         //Passport::setStampOffset({ docs[n].getPosition().x, docs[n].getPosition().y });
                         passport.setStampOffset({ (float(m_pos.x) - docs[n].getPosition().x - 50) / 2, (float(m_pos.y) - docs[n].getPosition().y-25) / 2 });
@@ -115,7 +119,7 @@ void Update(vector<Document>&docs, const Vector2i& m_pos, Vector2i OLDmouse_offs
             break;
         }
     }
-    // check if mouse released
+   // check if mouse released
     for (int i = 0; i < docs.size(); i++)
     {
         if (docs[i].getSelected() == true)
@@ -125,62 +129,6 @@ void Update(vector<Document>&docs, const Vector2i& m_pos, Vector2i OLDmouse_offs
                 break;
             }
     }
-    // scanner
-    for (int i = 0; i < docs.size(); i++)
-    {
-        if (docs[i].getDocID() == "passport")
-        {
-            if (CollisionPointRect(docs[i].getPosition(), { 700-12.5,500-12.5,25,25}))
-            {
-                Passport p;
-                if (Keyboard::isKeyPressed(Keyboard::Space))
-                    cout << '-';//AddImage();
-                DrawImage(window, "passport-" + p.getPassportData().country + ".png");
-            }
-            //if (docs[i].getSelected() && CollisionPointRect({ float(m_pos.x),float(m_pos.y) }, { 560,0,747,396 }))
-            //{
-            //    if (m_pos.x - docs[i].getPosition().x > 64 * 2)
-            //        docs[i].move({ 64 * 2,0 });
-            //    Passport::setOpened(false);
-            //    if (Passport::getStamped())
-            //    {
-            //        Text text;
-            //        Font font;
-            //        font.loadFromFile("pixelplay.ttf");
-            //        text.setFont(font);
-            //        text.setCharacterSize(35);
-            //        text.setOutlineThickness(4);
-            //        text.setOutlineColor(Color::Black);
-            //        text.setString(L"ŒÚ‰‡Ú¸");
-            //        text.setPosition(m_pos.x + 30, m_pos.y + 30);
-            //        window.draw(text);
-            //    }
-            //}
-        }
-
-    }
-    // rules
-    //for (int i = 0; i < docs.size(); i++)
-    //{
-    //    if (docs[i].getDocID() == "rules" && CollisionPointRect({float(m_pos.x),float(m_pos.y)}, {docs[i].getPosition(), docs[i].getSize()}))
-    //    {
-    //        for (int j = 0; j < rules.getIEAmount(); j++)
-    //        {
-    //            if (CollisionPointRect({ float(m_pos.x),float(m_pos.y) }, { docs[i].getPosition()+rules.getInterElem(j).pos,rules.getInterElem(j).size }))
-    //            {
-    //                cursor = "hand";
-    //                if (!dragging && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-    //                {
-    //                    cout << rules.getInterElem(j).id;
-    //                    rules.setPressed(j, true);
-    //                    cursor = "arrow";
-    //                }
-    //                else
-    //                    rules.setPressed(j, false);
-    //            }
-    //        }
-    //    }
-    //}
     // pass
     for (int i = 0; i < docs.size(); i++)
     {
@@ -197,8 +145,7 @@ void Update(vector<Document>&docs, const Vector2i& m_pos, Vector2i OLDmouse_offs
 
         }
     }
-
-    // stamps update
+   // stamps update
     /// ACCEPT
     if (CollisionPointRect({ float(m_pos.x),float(m_pos.y) }, { 1618,506,192,148 }))
     {
@@ -207,10 +154,11 @@ void Update(vector<Document>&docs, const Vector2i& m_pos, Vector2i OLDmouse_offs
         {
             for (int n = 0; n < docs.size(); n++)
             {
-                if (docs[n].getDocID() == "passport")
+                if (docs[n].getDocID() == Document::Document_ID::Passport)
                 {
 
-                    if (FloatRect{docs[n].getPosition(),docs[n].getSize()}.intersects(FloatRect{ 1618,506,192,148 }) && Passport::getOpened())
+                    if (FloatRect{docs[n].getPosition(),docs[n].getSize()}.intersects(FloatRect{ 1618,506,192,148 }) 
+                        && docs[n].isAdditionalDataContains("opened"))
                     {
                         //Passport::setStampOffset({ docs[n].getPosition().x, docs[n].getPosition().y });
                         passport.setStampOffset({ (1618 - docs[n].getPosition().x), (506 - docs[n].getPosition().y+50) });
@@ -232,9 +180,10 @@ void Update(vector<Document>&docs, const Vector2i& m_pos, Vector2i OLDmouse_offs
         {
             for (int n = 0; n < docs.size(); n++)
             {
-                if (docs[n].getDocID() == "passport")
+                if (docs[n].getDocID() == Document::Document_ID::Passport)
                 {
-                    if (FloatRect{docs[n].getPosition(),docs[n].getSize()}.intersects(FloatRect{ 1618,699,192,148 }) && Passport::getOpened())
+                    if (FloatRect{docs[n].getPosition(),docs[n].getSize()}.intersects(FloatRect{ 1618,699,192,148 }) 
+                        && docs[n].isAdditionalDataContains("opened"))
                     {
                         //Passport::setStampOffset({ docs[n].getPosition().x, docs[n].getPosition().y });
                         passport.setStampOffset({ (1618 - docs[n].getPosition().x), (699 - docs[n].getPosition().y+50) });
@@ -256,9 +205,9 @@ void Update(vector<Document>&docs, const Vector2i& m_pos, Vector2i OLDmouse_offs
 
     for (auto doc : docs)
     {
-        if (doc.getDocID() != "passport") continue;
+        if (doc.getDocID() != Document::Document_ID::Passport) continue;
 
-        if (Passport::getOpened())
+        if (doc.isAdditionalDataContains("opened"))
         {
             Interaction::EditElement("passport-name&surname", Interaction::Data::Enabled, "1");
             Interaction::EditElement("passport-birth", Interaction::Data::Enabled, "1");
@@ -267,7 +216,6 @@ void Update(vector<Document>&docs, const Vector2i& m_pos, Vector2i OLDmouse_offs
             Interaction::EditElement("passport-till", Interaction::Data::Enabled, "1");
             Interaction::EditElement("passport-index", Interaction::Data::Enabled, "1");
             Interaction::EditElement("passport-photo", Interaction::Data::Enabled, "1");
-            Interaction::EditElement("passport-bottom_part", Interaction::Data::Enabled, "1");
 
             Interaction::EditElement("passport-name&surname",Interaction::Data::Params::Xpos, 
                 to_string(doc.getPosition().x + 14));
@@ -293,14 +241,6 @@ void Update(vector<Document>&docs, const Vector2i& m_pos, Vector2i OLDmouse_offs
                 to_string(doc.getPosition().x + 212));
             Interaction::EditElement("passport-index",Interaction::Data::Params::Ypos,
                 to_string(doc.getPosition().y + 401));
-            Interaction::EditElement("passport-photo",Interaction::Data::Params::Xpos,
-                to_string(doc.getPosition().x + 212));
-            Interaction::EditElement("passport-photo",Interaction::Data::Params::Ypos,
-                to_string(doc.getPosition().y + 284));
-            Interaction::EditElement("passport-bottom_part",Interaction::Data::Params::Xpos,
-                to_string(doc.getPosition().x + 10));
-            Interaction::EditElement("passport-bottom_part",Interaction::Data::Params::Ypos,
-                to_string(doc.getPosition().y + 238));
 
         }
         else
@@ -313,124 +253,13 @@ void Update(vector<Document>&docs, const Vector2i& m_pos, Vector2i OLDmouse_offs
             Interaction::EditElement("passport-till", Interaction::Data::Enabled, "0");
             Interaction::EditElement("passport-index", Interaction::Data::Enabled, "0");
             Interaction::EditElement("passport-photo", Interaction::Data::Enabled, "0");
-            Interaction::EditElement("passport-bottom_part", Interaction::Data::Enabled, "0");
         }
     }
 
 }
 
-void UpdateSelection(vector<Document>& docs, const Vector2i& m_pos )
-{
-    for (int i = docs.size() - 1; i >= 0; i--)
-    {
-        if (CollisionPointRect({ float(m_pos.x),float(m_pos.y) }, { docs[i].getPosition(),docs[i].getSize() }))
-        {
-            if (Interaction::IsAnyElement(Interaction::Data::Mouse_Left_DoubleClick)
-                && docs[i].getDocID() == "passport" && Stamp::getColliding() == false)
-            {
-                if (Interaction::GetElement("passport-name&surname").Mouse_condition == Interaction::Data::Mouse_Left_DoubleClick)
-                {
-                    setlocale(LC_ALL, "ru");
-                    Interaction::Data::Area element = Interaction::GetElement("passport-name&surname");
-                    Selection::AutoSelect({ element.x,element.y }, { element.w,element.h });
-                    printf("[DEBUG] passport data: name & surname: [%ls] [%ls]\n", Passport::getPassportData().name.c_str(), Passport::getPassportData().surname.c_str());
-                }
-                if (Interaction::GetElement("passport-birth").Mouse_condition == Interaction::Data::Mouse_Left_DoubleClick)
-                {
-                    setlocale(LC_ALL, "ru");
-                    Interaction::Data::Area element = Interaction::GetElement("passport-birth");
-                    Selection::AutoSelect({ element.x,element.y }, { element.w,element.h });
-                    printf("[DEBUG] passport data: birth: [%ls] \n", Passport::getPassportData().birth);
-                }
-                if (Interaction::GetElement("passport-sex").Mouse_condition == Interaction::Data::Mouse_Left_DoubleClick)
-                {
-                    setlocale(LC_ALL, "ru");
-                    Interaction::Data::Area element = Interaction::GetElement("passport-sex");
-                    Selection::AutoSelect({ element.x,element.y }, { element.w,element.h });
-                    printf("[DEBUG] passport data: sex: [%ls] \n", Passport::getPassportData().sex);
-                }
-                if (Interaction::GetElement("passport-town").Mouse_condition == Interaction::Data::Mouse_Left_DoubleClick)
-                {
-                    setlocale(LC_ALL, "ru");
-                    Interaction::Data::Area element = Interaction::GetElement("passport-town");
-                    Selection::AutoSelect({ element.x,element.y }, { element.w,element.h });
-                    printf("[DEBUG] passport data: town: [%ls] \n", Passport::getPassportData().town.c_str());
-                }
-                if (Interaction::GetElement("passport-till").Mouse_condition == Interaction::Data::Mouse_Left_DoubleClick)
-                {
-                    setlocale(LC_ALL, "ru");
-                    Interaction::Data::Area element = Interaction::GetElement("passport-till");
-                    Selection::AutoSelect({ element.x,element.y }, { element.w,element.h });
-                    printf("[DEBUG] passport data: till: [%ls] \n", Passport::getPassportData().till.c_str());
-                }
-                if (Interaction::GetElement("passport-index").Mouse_condition == Interaction::Data::Mouse_Left_DoubleClick)
-                {
-                    setlocale(LC_ALL, "ru");
-                    Interaction::Data::Area element = Interaction::GetElement("passport-index");
-                    Selection::AutoSelect({ element.x,element.y }, { element.w,element.h });
-                    printf("[DEBUG] passport data: index: [%ls] \n", Passport::getPassportData().id);
-                }
-                if (Interaction::GetElement("passport-photo").Mouse_condition == Interaction::Data::Mouse_Left_DoubleClick)
-                {
-                    setlocale(LC_ALL, "ru");
-                    Interaction::Data::Area element = Interaction::GetElement("passport-photo");
-                    Selection::AutoSelect({ element.x,element.y }, { element.w,element.h });
-                    printf("[DEBUG] passport data: till: [commentary:<NOT FOUND>] \n");
-                }
 
-                break;
-            }
-        }
-    }
-    if (Interaction::IsAnyElement(Interaction::Data::Mouse_Left_DoubleClick))
-    {
-        if (Interaction::GetElement("PC-passport-name&surname").Mouse_condition == Interaction::Data::Mouse_Left_DoubleClick)
-        {
-            setlocale(LC_ALL, "ru");
-            Interaction::Data::Area element = Interaction::GetElement("PC-passport-name&surname");
-            Selection::AutoSelect({ element.x,element.y }, { element.w,element.h });
-            printf("[DEBUG] PC passport data: name & surname: [%ls] [%ls]\n", Passport::getPassportData().name.c_str(), Passport::getPassportData().surname.c_str());
-        }
-        if (Interaction::GetElement("PC-passport-birth").Mouse_condition == Interaction::Data::Mouse_Left_DoubleClick)
-        {
-            setlocale(LC_ALL, "ru");
-            Interaction::Data::Area element = Interaction::GetElement("PC-passport-birth");
-            Selection::AutoSelect({ element.x,element.y }, { element.w,element.h });
-        }
-        if (Interaction::GetElement("PC-passport-sex").Mouse_condition == Interaction::Data::Mouse_Left_DoubleClick)
-        {
-            setlocale(LC_ALL, "ru");
-            Interaction::Data::Area element = Interaction::GetElement("PC-passport-sex");
-            Selection::AutoSelect({ element.x,element.y }, { element.w,element.h });
-        }
-        if (Interaction::GetElement("PC-passport-town").Mouse_condition == Interaction::Data::Mouse_Left_DoubleClick)
-        {
-            setlocale(LC_ALL, "ru");
-            Interaction::Data::Area element = Interaction::GetElement("PC-passport-town");
-            Selection::AutoSelect({ element.x,element.y }, { element.w,element.h });
-        }
-        if (Interaction::GetElement("PC-passport-till").Mouse_condition == Interaction::Data::Mouse_Left_DoubleClick)
-        {
-            setlocale(LC_ALL, "ru");
-            Interaction::Data::Area element = Interaction::GetElement("PC-passport-till");
-            Selection::AutoSelect({ element.x,element.y }, { element.w,element.h });
-        }
-        if (Interaction::GetElement("PC-passport-photo").Mouse_condition == Interaction::Data::Mouse_Left_DoubleClick)
-        {
-            setlocale(LC_ALL, "ru");
-            Interaction::Data::Area element = Interaction::GetElement("PC-passport-photo");
-            Selection::AutoSelect({ element.x,element.y }, { element.w,element.h });
-        }
-        if (Interaction::GetElement("PC-passport-index").Mouse_condition == Interaction::Data::Mouse_Left_DoubleClick)
-        {
-            setlocale(LC_ALL, "ru");
-            Interaction::Data::Area element = Interaction::GetElement("PC-passport-index");
-            Selection::AutoSelect({ element.x,element.y }, { element.w,element.h });
-        }
-    }
-}
-
-void Update_Interface(RenderWindow& window, const Vector2i& m_pos)
+void update_Interface(RenderWindow& window, const Vector2i& m_pos)
 {
     Texture texture, btn_texture;
     Sprite sprite;
@@ -502,7 +331,7 @@ void Update_Interface(RenderWindow& window, const Vector2i& m_pos)
         window.draw(btn);
 }
 
-void Update_Stamps(RenderWindow& window, unsigned int& pressed_state, map<string, Animation>& animations)
+void update_Stamps(RenderWindow& window, unsigned int& pressed_state, map<string, Animation>& animations)
 {
 
     if (pressed_state == 1)
@@ -556,22 +385,22 @@ bool checkWithBaseData(Passport p)
 {
     return true;
 }
-void Update_Document_State(RenderWindow& window, vector<Document>&docs)
+void update_Document_State(RenderWindow& window, vector<Document>&docs)
 {
     Vector2i m_pos = Mouse::getPosition(window);
     for (int i = 0; i < docs.size(); i++)
     {
         bool give_away = false;
-        if(docs[i].getDocID() == "passport" || docs[i].getDocID() == "pass" || docs[i].getDocID() == "right"
-            || docs[i].getDocID() == "qr")
+        if(docs[i].getDocID() == Document::Document_ID::Passport || docs[i].getDocID() == Document::Document_ID::Pass || docs[i].getDocID() == Document::Document_ID::Right
+            || docs[i].getDocID() == Document::Document_ID::QR)
         if ( docs[i].getSelected() && CollisionPointRect({float(m_pos.x),float(m_pos.y)}, {560,0,747,396}))
         {
-            if(docs[i].getDocID() == "passport")
+            if(docs[i].getDocID() == Document::Document_ID::Passport)
             {
                 if (m_pos.x - docs[i].getPosition().x > 64 * 2)
                     docs[i].move({ 64 * 2,0 });
-                if (Passport::getStatus() != Passport::TEMP_VISA)
-                    Passport::setOpened(false);
+                if (docs[i].isAdditionalDataContains("temporary passport"))
+                docs[i].editAdditionalData("opened", "closed");
             }
             if (Passport::getStamped())
             {
@@ -599,8 +428,8 @@ void Update_Document_State(RenderWindow& window, vector<Document>&docs)
 
                 for (auto& doc : docs)
                 {
-                    if (doc.getDocID() == "passport" || doc.getDocID() == "pass" || doc.getDocID() == "right"
-                        || doc.getDocID() == "qr")
+                    if (doc.getDocID() == Document::Document_ID::Passport || doc.getDocID() == Document::Document_ID::Pass || 
+                        doc.getDocID() == Document::Document_ID::Right || doc.getDocID() == Document::Document_ID::QR)
                     {
                         all_docs_given = false;
                         //checkWithBaseData();

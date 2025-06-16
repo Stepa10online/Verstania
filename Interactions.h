@@ -36,6 +36,7 @@ namespace Interaction
 			sf::Color color = Color::Transparent;
 			Data::AreaState Mouse_condition;
 			AreaState LastOperation = Not_Enabled;
+			bool CursorChanging = false;
 		};
 		enum Params
 		{
@@ -78,10 +79,11 @@ namespace Interaction
 	{
 		return all_elements[i];
 	}
-	Data::Area GetElement(string index)
+	Data::Area GetElement(string s_index)
 	{
 		for (auto element : all_elements)
-			if (element.index == index) return element;
+			if (element.index == s_index) return element;
+		cout << "[DEBUG ERROR] GetElement(string s_index): no such s_index: \""<<s_index<<"\"" << endl;
 
 	}
 
@@ -90,7 +92,7 @@ namespace Interaction
 		if (i < all_elements.size())
 			return all_elements[i];
 		else
-			cout << "[DEBUG ERROR] out of range in function \"EditElement\"!" << endl;
+			cout << "[DEBUG ERROR] EditElement(int i): out of range. element number\"" << i << "\"" << endl;
 	}
 
 	Data::Area& EditElement(string s_index)
@@ -104,7 +106,7 @@ namespace Interaction
 		if (index != -1)
 			return all_elements[index];
 		else
-			cout << "[DEBUG ERROR] out of range in function \"EditElement\"!" << endl;
+			cout << "[DEBUG ERROR] out of range in function \"EditElement(string s_index)\" by element \""<<s_index<<"\"!" << endl;
 	}
 	// Да, Я не знаю как заставить эту штуку нормально работать потому использую костыль и не стыжусь этого
 	bool EditElement(int i, Data::Params parameters, string data)
@@ -130,7 +132,7 @@ namespace Interaction
 			all_elements[i].enabled = stoi(data);
 			break;
 		default:
-			cout << "[DEBUG ERROR] [Interaction] out of range in function \"EditElement\"!" << endl;
+			cout << "[DEBUG ERROR] [Interaction] out of range in function \"EditElement(int i, Data::Params parameters, string data)\"!" << endl;
 			break;
 		}
 		return true;
@@ -145,7 +147,7 @@ namespace Interaction
 		}
 		if (index == -1)
 		{
-			cout << "[DEBUG ERROR] [Interaction] out of range in function \"EditElement\"!" << endl;
+			cout << "[DEBUG ERROR] [Interaction] out of range in function \"EditElement(string s_index, Data::Params parameters, string data)\" by element \""<<s_index<<"\"!" << endl;
 			return false;
 		}
 		switch (parameters)

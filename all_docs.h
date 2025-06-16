@@ -47,12 +47,12 @@ public:
 	static void setPressed(unsigned int state) { pressed = state;  }
 
 };
-Vector2f Stamp::position = {0,0};
-string Stamp::stamp_texture = "denied";
-int unsigned Stamp::pressed = 0;
-bool Stamp::colliding = false;
-bool Stamp::hidden = false;
-bool Stamp::accepted = false;
+		Vector2f Stamp::position = {0,0};
+		string Stamp::stamp_texture = "denied";
+		int unsigned Stamp::pressed = 0;
+		bool Stamp::colliding = false;
+		bool Stamp::hidden = false;
+		bool Stamp::accepted = false;
 
 
 class Passport : public Document
@@ -68,36 +68,27 @@ public:
 		wstring id;
 		wstring sex;
 		wstring till;
-	}static pd;
-	enum Status
+	};
+	enum State
 	{
 		USUAL,
 		TEMP_VISA,
-
 	};
 
 	void setPassportData(PassportData tpd)
 	{
-		pd.name = tpd.name;
-		pd.surname = tpd.surname;
-		pd.country = tpd.country;
-		pd.birth = tpd.birth;
-		pd.town = tpd.town;
-		pd.id = tpd.id;
-		pd.sex = tpd.sex;
-		pd.till = tpd.till;
-	}
-	static void setOpened(bool state)
-	{
-		opened = state;
-	}
-	static bool getOpened()
-	{
-		return opened;
+		passport_data.name = tpd.name;
+		passport_data.surname = tpd.surname;
+		passport_data.country = tpd.country;
+		passport_data.birth = tpd.birth;
+		passport_data.town = tpd.town;
+		passport_data.id = tpd.id;
+		passport_data.sex = tpd.sex;
+		passport_data.till = tpd.till;
 	}
 	static PassportData& getPassportData()
 	{
-		return pd;
+		return passport_data;
 	}
 	static void setStamped(bool state)
 	{
@@ -134,32 +125,19 @@ public:
 	{
 		return stamp.getStampOffset();
 	}
-	void setTexture( string texture)
-	{
-		stamp.setTexture(texture);
-	}
 
-	static void setStatus(Status new_status)
-	{
-		status = new_status;
-	}
-	static Status getStatus() { return status; }
+
 
 private:
 	Image image;
-	static bool opened;
 	static bool stamped;
-	static string opened_texture;
-	static string closed_texture;
 	unsigned int state; // 0-undefied 1-accepted 2-denied
 	static Stamp stamp;
-	static Status status;
+	static PassportData passport_data;
 };
-Passport::PassportData Passport::pd = {L".s",L",",L"1"};
-bool Passport::opened = false;
-bool Passport::stamped = false;
-bool Document::give_new_docs = true;
-Passport::Status Passport::status = Passport::USUAL;
+		Passport::PassportData Passport::passport_data = {L".s",L",",L"1"};
+		bool Passport::stamped = false;
+		bool Document::give_new_docs = true;
 
 class InteractionElement
 {
@@ -261,7 +239,6 @@ public:
 	}
 
 };
-
 class Pass
 {
 private:
@@ -281,7 +258,6 @@ public:
 		return this->text;
 	}
 };
-
 class Papers : public Document
 {
 private:
@@ -294,7 +270,7 @@ private:
 public:
 	Papers(string texture_name = "placeholder.png")
 	{
-		this->setTextureName(texture_name);
+		this->setTexture(0, texture_name);
 	}
 	void setString(const unsigned int& i, const wstring& str)
 	{
