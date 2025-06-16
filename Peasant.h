@@ -7,6 +7,8 @@ using namespace std;
 class Peasant
 {
 private:
+
+	// pasport data
 	string texture;
 	vector<string> texts;
 	wstring name;
@@ -20,12 +22,16 @@ private:
 	int weight;
 	string photo_texture;
 
-	// for pasport
-
-	// for right
+	// right data
+//  +name, surname, ...
 	static wstring purpose;
 	static wstring duration;
-	// for qr
+	
+	// qr data
+//  +name, surname, ...
+
+	// IAAD ( I_nformation A_bout A_dding to the D_atabase)
+//  
 
 	struct data_naming { wstring sex; wstring name; wstring surname; };
 	static data_naming name_list[100];
